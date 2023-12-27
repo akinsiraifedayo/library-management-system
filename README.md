@@ -1,6 +1,4 @@
-Certainly! Below is a template for a README.md file that explains the library management system and how to use it:
 
-```markdown
 # Library Management System
 
 ## Overview
