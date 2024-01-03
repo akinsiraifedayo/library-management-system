@@ -1,0 +1,5 @@
+user_name,user_type,user_phone,user_email,password
+user,user,s,s,s
+admin1,admin,12345,@,admin1
+a,admin,a,a,a
+b,user,b,b,b
