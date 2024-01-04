@@ -51,9 +51,9 @@ class User:
 
         if book_to_renew:
             if book_to_renew.reserved and not book_to_renew.availability:
-                # Implement your logic to renew the book (update database, etc.)
-                # For simplicity, let's assume that renewing simply extends the return date.
                 book_to_renew.due_return += timedelta(days=14)
+                library.save_books()
+
                 print(f"Book '{book_to_renew.book_title}' renewed successfully. New due date: {book_to_renew.due_return}")
             else:
                 print("Book cannot be renewed. Check availability and reservation status.")
@@ -97,7 +97,7 @@ class Admin(User):
             print(f"User Name: {user.user_name}, User Type: {user.user_type}, Phone: {user.user_phone}, Email: {user.user_email}")
 
 class Book:
-    def __init__(self, book_id, book_title, book_author, availability, reserved=False, due_return=False):
+    def __init__(self, book_id, book_title, book_author, availability=None, reserved=False, due_return=False):
         self.book_id = book_id
         self.book_title = book_title
         self.book_author = book_author

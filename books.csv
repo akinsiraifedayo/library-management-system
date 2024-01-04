@@ -1,5 +1,6 @@
-book_id,book_title,author,availability,reserved,due_return
-a,a,None,True,1,
-ad,ad,None,True,True,
-adv,adv,None,False,1,
-asasa,asaa,None,aasa,False,
+book_id,book_title,availability,reserved,due_return
+a,a,1,,
+ad,ad,True,,
+adv,adv,1,,
+asasa,asaa,False,,
+v,v,,False,
