@@ -28,7 +28,7 @@ class User:
         if matching_books:
             print("Matching Books:")
             for book in matching_books:
-                print(f"ID: {book.book_id}, Title: {book.book_title}, Availability: {book.availability}")
+                print(f"ISBN: {book.book_id}, Title: {book.book_title}, Availability: {book.availability}")
         else:
             print("No matching books found.")
 
@@ -46,8 +46,19 @@ class User:
         else:
             print("Book not found.")
 
-    def renew(self):
-        print("Renewing a reserved book.")
+    def renew_book(self, book_id, library):
+        book_to_renew = library.find_book_by_id(book_id)
+
+        if book_to_renew:
+            if book_to_renew.reserved and not book_to_renew.availability:
+                # Implement your logic to renew the book (update database, etc.)
+                # For simplicity, let's assume that renewing simply extends the return date.
+                book_to_renew.due_return += timedelta(days=14)
+                print(f"Book '{book_to_renew.book_title}' renewed successfully. New due date: {book_to_renew.due_return}")
+            else:
+                print("Book cannot be renewed. Check availability and reservation status.")
+        else:
+            print("Book not found.")
 
 
 class Admin(User):
@@ -60,25 +71,25 @@ class Admin(User):
             writer.writerow([self.user_name, "admin", self.user_phone, self.user_email, self.password])
         print(f"Admin {self.user_name} registered successfully.")
 
-    def add_book(self, library):
+    def add_book(self, library): 
+        ISBN = input("Enter the book's ISBN: ")
         title = input("Enter the book's title: ")
         author = input("Enter the book's author: ")
-        ISBN = input("Enter the book's ISBN: ")
 
-        new_book = Book(title, author, ISBN)
+        new_book = Book(ISBN, title, author)
         library.add_book(new_book)
 
         print(f"Book {title} added successfully.")
 
     def delete_book(self, library):
-        book_id = input("Enter the book ID to delete: ")
+        book_id = input("Enter the book ISBN to delete: ")
         if any(book.book_id == book_id for book in library.books):
             updated_books = [book for book in library.books if book.book_id != book_id]
             library.books = updated_books
             library.save_books()
-            print(f"Book with ID {book_id} deleted successfully.")
+            print(f"Book with ISBN {book_id} deleted successfully.")
         else:
-            print(f"Book with ID {book_id} not found.")
+            print(f"Book with ISBN {book_id} not found.")
 
     def view_users(self, library):
         print("Viewing user information:")
@@ -86,11 +97,13 @@ class Admin(User):
             print(f"User Name: {user.user_name}, User Type: {user.user_type}, Phone: {user.user_phone}, Email: {user.user_email}")
 
 class Book:
-    def __init__(self, book_id, book_title, availability, reserved):
+    def __init__(self, book_id, book_title, book_author, availability, reserved=False, due_return=False):
         self.book_id = book_id
         self.book_title = book_title
+        self.book_author = book_author
         self.availability = availability
         self.reserved = reserved
+        self.due_return = due_return
 
     def availability_status(self):
         return "Available" if self.availability and not self.reserved else "Not Available"
@@ -249,7 +262,7 @@ class Library:
         try:
             with open(self.book_file, 'r') as file:
                 reader = csv.DictReader(file)
-                books = [Book(row['book_id'], row['book_title'], row['availability'], row['reserved']) for row in reader]
+                books = [Book(row['book_id'], row['book_title'], row['availability'], row['reserved'], row['due_return']) for row in reader]
             return books
         except FileNotFoundError:
             return []
@@ -280,10 +293,21 @@ class Library:
         self.save_members()
 
     def save_books(self):
-        with open(self.book_file, 'w', newline='') as file:
-            writer = csv.writer(file)
-            for book in self.books:
-                writer.writerow([book.book_id, book.book_title, book.availability, book.reserved])
+        try:
+            with open(self.book_file, 'w', newline='') as file:
+                fieldnames = ['book_id', 'book_title', 'availability', 'reserved', 'due_return']
+                writer = csv.DictWriter(file, fieldnames=fieldnames)
+                writer.writeheader()
+                for book in self.books:
+                    writer.writerow({
+                        'book_id': book.book_id,
+                        'book_title': book.book_title,
+                        'availability': book.availability,
+                        'reserved': book.reserved,
+                        'due_return': book.due_return.strftime('%Y-%m-%d') if book.due_return else ''
+                    })
+        except Exception as e:
+            print(f"Error saving books: {e}")
 
     def search_books(self, search_query):
         matching_books = [book for book in self.books if search_query.lower() in book.book_title.lower()]
@@ -335,13 +359,14 @@ def main():
                 print("Please register first.")
         elif choice == '4':
             if user:
-                book_id_to_reserve = input("Enter the book ID to reserve: ")
+                book_id_to_reserve = input("Enter the book ISBN to reserve: ")
                 user.reservation(book_id_to_reserve, library)
             else:
                 print("Please register first.")
         elif choice == '5':
             if user:
-                user.renew()
+                book_id = input("Enter the book ISBN you want to renew: ")
+                user.renew_book(book_id, library)
             else:
                 print("Please register first.")
         elif choice == '6' and isinstance(user, Admin):
