@@ -1,6 +1,3 @@
 book_id,book_title,availability,reserved,due_return
-a,a,1,,
-ad,ad,True,,
-adv,adv,1,,
-asasa,asaa,False,,
-v,v,,False,
+1111,HarryPotter,True,0,
+1112,weww,,False,

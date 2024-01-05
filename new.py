@@ -38,9 +38,10 @@ class User:
         """
         if entered_password == self.password:
             print(f"User {self.user_name} logged in.")
+            return True
         else:
             print("Incorrect password. Login failed.")
-
+            return False
     def search(self, search_query, library):
         """
         Search for books in the library based on the provided query.
@@ -613,6 +614,7 @@ class Library:
         - List[Book]: List of matching Book objects.
         """
         matching_books = [book for book in self.books if search_query.lower() in book.book_title.lower()]
+
         return matching_books
     
         
@@ -653,12 +655,16 @@ def main():
 
             if matching_users:
                 user = matching_users[0]
-                user.login(entered_password)
+                isCorrect = user.login(entered_password)
+                if not isCorrect:
+                    user = None
+                    print("Incorrect Details.")
+
             else:
                 print("User not found. Please register first.")
         elif choice == '3':
             if user:
-                search_query = input("Enter the book title or author: ")
+                search_query = input("Enter the book title: ")
                 user.search(search_query, library)
             else:
                 print("Please register first.")
